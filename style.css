@@ -213,7 +213,22 @@ footer { text-align: center; padding: 8px; color: var(--muted); font-size: 0.9re
 .primary-action { background: var(--dark); color: white; border-color: var(--dark); }
 .status-filters { display: flex; flex-wrap: wrap; gap: 7px; }
 .chip { border: 1px solid var(--border); border-radius: 999px; padding: 7px 11px; background: white; font-weight: 750; cursor: pointer; }
-.chip.active { background: var(--dark); color: white; border-color: var(--dark); }
+ .chip.active { background: var(--dark); color: white; border-color: var(--dark); }
+.status-count {
+  display: inline-flex;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.08);
+  font-size: .78rem;
+  font-weight: 850;
+  line-height: 1;
+}
+.chip.active .status-count { background: rgba(255,255,255,.18); color: inherit; }
 .badge.active-status { background: rgba(58,157,23,.12); color: var(--green-dark); }
 .badge.inactive-status { background: rgba(107,107,107,.14); color: #555; }
 .admin-section table { min-width: 700px; }
@@ -903,4 +918,52 @@ footer { text-align: center; padding: 8px; color: var(--muted); font-size: 0.9re
   .editor-calendar-controls { grid-template-columns: 1fr; }
   .selected-editor-date { width: 100%; }
   .secret-toggle-btn { min-height: 58px; }
+}
+
+/* Selector de tipus de jornada a l'editor de fitxatges */
+.punch-mode-selector {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  padding-bottom: 2px;
+}
+.punch-mode-title {
+  font-size: .86rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.punch-mode-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.punch-mode-btn {
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: #f7f8f4;
+  color: var(--text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: left;
+  transition: .15s ease;
+}
+.punch-mode-btn small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 650;
+}
+.punch-mode-btn:hover { border-color: #aeb7aa; }
+.punch-mode-btn.active {
+  border-color: #333;
+  background: #333;
+  color: white;
+}
+.punch-mode-btn.active small { color: #e8e8e8; }
+@media (max-width: 580px) {
+  .punch-mode-buttons { grid-template-columns: 1fr; }
 }

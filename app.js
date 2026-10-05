@@ -5,7 +5,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_yINpI3MnA7jWaLLROmechw_7K0GqwwR";
 const isConfigured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("POSA_AQUI") && !SUPABASE_ANON_KEY.includes("POSA_AQUI") && !SUPABASE_ANON_KEY.startsWith("sb_secret_");
 const db = isConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-const ids = ["employeeCode","toggleCodeBtn","entryBtn","exitBtn","resultCard","resultIcon","resultTitle","resultText","connectionDot","connectionText","currentDate","currentTime","adminEmail","adminPassword","adminLoginBtn","adminLogin","adminPanel","adminUser","recordsBody","employeesBody","refreshBtn","exportBtn","exportSummaryBtn","logoutBtn","employeeSearch","employeeFilter","monthFilter","dayFilter","typeFilter","clearFiltersBtn","recordCount","employeeForm","editingEmployeeId","employeeName","employeeAdminCode","employeeActive","saveEmployeeBtn","cancelEditEmployeeBtn","employeeListSearch","employeeSort","employeeCount","employeeMonthSummary","summaryPlaceholder","summaryContent","summaryEmployeeName","summaryMonthLabel","summaryTotalHours","summaryWorkedDays","workCalendar","dailySummaryBody","bulkProgress","bulkProgressTitle","bulkProgressText","cancelBulkBtn","punchEditorCategory","punchEditorForm","editPunchEmployee","editPunchDate","editPunchEntry1","editPunchExit1","editPunchEntry2","editPunchExit2","editPunchHours","editPunchReason","loadPunchDayBtn","savePunchDayBtn","clearPunchDayBtn","batchStartDate","batchEndDate","batchEntry1","batchExit1","batchEntry2","batchExit2","batchReason","createBatchDaysBtn","weekdayPicker","employeeDocument","workerPortalDetails","workerPortalLogin","workerPortalCode","workerPortalMonth","workerPortalBtn","workerPortalPanel","workerPortalName","workerPortalMonthLabel","workerPortalHours","workerPortalDays","workerPortalCalendar","workerPortalRecords","workerPortalCloseBtn","batchAllActive","autoPunchStatus","autoPunchEnabled","autoPunchEntry1","autoPunchExit1","autoPunchEntry2","autoPunchExit2","saveAutoPunchBtn","notificationBtn","editCalendarMonth","editPunchCalendar","editSelectedDate"];
+const ids = ["employeeCode","toggleCodeBtn","entryBtn","exitBtn","resultCard","resultIcon","resultTitle","resultText","connectionDot","connectionText","currentDate","currentTime","adminEmail","adminPassword","adminLoginBtn","adminLogin","adminPanel","adminUser","recordsBody","employeesBody","refreshBtn","exportBtn","exportSummaryBtn","logoutBtn","employeeSearch","employeeFilter","monthFilter","dayFilter","typeFilter","clearFiltersBtn","recordCount","employeeForm","editingEmployeeId","employeeName","employeeAdminCode","employeeActive","saveEmployeeBtn","cancelEditEmployeeBtn","employeeListSearch","employeeSort","employeeCount","employeeMonthSummary","summaryPlaceholder","summaryContent","summaryEmployeeName","summaryMonthLabel","summaryTotalHours","summaryWorkedDays","workCalendar","dailySummaryBody","bulkProgress","bulkProgressTitle","bulkProgressText","cancelBulkBtn","punchEditorCategory","punchEditorForm","editPunchEmployee","editPunchDate","editPunchEntry1","editPunchExit1","editPunchEntry2","editPunchExit2","editPunchHours","editPunchReason","loadPunchDayBtn","savePunchDayBtn","clearPunchDayBtn","batchStartDate","batchEndDate","batchEntry1","batchExit1","batchEntry2","batchExit2","batchReason","createBatchDaysBtn","weekdayPicker","employeeDocument","workerPortalDetails","workerPortalLogin","workerPortalCode","workerPortalMonth","workerPortalBtn","workerPortalPanel","workerPortalName","workerPortalMonthLabel","workerPortalHours","workerPortalDays","workerPortalCalendar","workerPortalRecords","workerPortalCloseBtn","batchAllActive","autoPunchStatus","autoPunchEnabled","autoPunchEntry1","autoPunchExit1","autoPunchEntry2","autoPunchExit2","saveAutoPunchBtn","notificationBtn","editCalendarMonth","editPunchCalendar","editSelectedDate","editFullDayBtn","editHalfDayBtn","editPunchExit1Label","editPunchEntry2Label","editPunchExit2Label"];
 const els = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
 
 let currentRecords = [];
@@ -175,6 +175,16 @@ function renderEmployees() {
     if (sortMode === "name-desc") return b.nom.localeCompare(a.nom, "ca", { sensitivity: "base" });
     return Number(a.id) - Number(b.id);
   });
+  const totalEmployees = employees.length;
+  const activeEmployees = employees.filter(e => e.actiu).length;
+  const inactiveEmployees = totalEmployees - activeEmployees;
+  const allCountEl = document.getElementById("employeeStatusAllCount");
+  const activeCountEl = document.getElementById("employeeStatusActiveCount");
+  const inactiveCountEl = document.getElementById("employeeStatusInactiveCount");
+  if (allCountEl) allCountEl.textContent = totalEmployees;
+  if (activeCountEl) activeCountEl.textContent = activeEmployees;
+  if (inactiveCountEl) inactiveCountEl.textContent = inactiveEmployees;
+
   els.employeeCount.textContent = `${list.length} ${list.length === 1 ? "empleat" : "empleats"}`;
   els.employeesBody.innerHTML = list.length ? list.map(e => `<tr>
     <td>${escapeHtml(e.nom)}</td>
@@ -460,9 +470,33 @@ function timeFromMinutes(total) {
   total = ((Math.round(total) % 1440) + 1440) % 1440;
   return `${String(Math.floor(total / 60)).padStart(2,"0")}:${String(total % 60).padStart(2,"0")}`;
 }
+let editPunchMode = "full";
+function setPunchEditorMode(mode) {
+  editPunchMode = mode === "half" ? "half" : "full";
+  const full = editPunchMode === "full";
+  els.editFullDayBtn.classList.toggle("active", full);
+  els.editHalfDayBtn.classList.toggle("active", !full);
+  els.editPunchEntry2Label.classList.toggle("hidden", !full);
+  els.editPunchExit2Label.classList.toggle("hidden", !full);
+  els.editPunchExit1.required = true;
+  els.editPunchEntry2.required = full;
+  els.editPunchExit2.required = full;
+  if (!full) {
+    els.editPunchEntry2.value = "";
+    els.editPunchExit2.value = "";
+  }
+  calculateSplitHours();
+}
 function calculateSplitHours() {
   const e1 = minutesFromTime(els.editPunchEntry1.value);
   const s1 = minutesFromTime(els.editPunchExit1.value);
+  if (editPunchMode === "half") {
+    if (e1 === null || s1 === null) { els.editPunchHours.value = ""; return; }
+    if (!(e1 < s1)) { els.editPunchHours.value = "Horari no vàlid"; return; }
+    const total = s1 - e1;
+    els.editPunchHours.value = `${Math.floor(total/60)} h ${String(total%60).padStart(2,"0")} min`;
+    return;
+  }
   const e2 = minutesFromTime(els.editPunchEntry2.value);
   const s2 = minutesFromTime(els.editPunchExit2.value);
   if ([e1,s1,e2,s2].some(v => v === null)) { els.editPunchHours.value = ""; return; }
@@ -477,29 +511,42 @@ async function loadPunchDay() {
   const { data, error } = await db.rpc("admin_obtenir_jornada_doble", { p_empleat_id: Number(employeeId), p_data: date });
   if (error) return showResult(false, "No s'ha pogut carregar", humanizeError(error.message));
   const row = Array.isArray(data) ? data[0] : data;
+  const hasFirstShift = Boolean(row?.entrada_1 && row?.sortida_1);
+  const hasSecondShift = Boolean(row?.entrada_2 && row?.sortida_2);
+  setPunchEditorMode(hasSecondShift ? "full" : hasFirstShift ? "half" : editPunchMode);
   els.editPunchEntry1.value = row?.entrada_1 ? String(row.entrada_1).slice(0,5) : "";
   els.editPunchExit1.value = row?.sortida_1 ? String(row.sortida_1).slice(0,5) : "";
   els.editPunchEntry2.value = row?.entrada_2 ? String(row.entrada_2).slice(0,5) : "";
   els.editPunchExit2.value = row?.sortida_2 ? String(row.sortida_2).slice(0,5) : "";
   calculateSplitHours();
-  showResult(true, "Jornada carregada", row?.entrada_1 ? "Pots corregir les dues jornades i la pausa intermèdia." : "Aquest dia encara no té dues jornades completes.");
+  showResult(true, "Jornada carregada", hasSecondShift ? "S'ha detectat una jornada completa amb pausa intermèdia." : row?.entrada_1 ? "S'ha detectat una mitja jornada (1 entrada i 1 sortida)." : "Aquest dia encara no té fitxatges.");
 }
 async function savePunchDay(event) {
   event.preventDefault();
   if (!assertPrimaryAdmin()) return;
-  const payload = {
-    p_empleat_id: Number(els.editPunchEmployee.value), p_data: els.editPunchDate.value,
-    p_entrada_1: els.editPunchEntry1.value, p_sortida_1: els.editPunchExit1.value,
-    p_entrada_2: els.editPunchEntry2.value, p_sortida_2: els.editPunchExit2.value,
-    p_motiu: els.editPunchReason.value.trim()
-  };
-  if (!payload.p_empleat_id || !payload.p_data || !payload.p_entrada_1 || !payload.p_sortida_1 || !payload.p_entrada_2 || !payload.p_sortida_2 || !payload.p_motiu) return showResult(false, "Dades incompletes", "Omple treballador, data, les quatre hores i el motiu.");
-  if (payload.p_data > todayLocalIso()) return showResult(false, "Data no permesa", "No es poden crear jornades en dies futurs.");
+  const employeeId = Number(els.editPunchEmployee.value);
+  const date = els.editPunchDate.value;
+  const e1 = els.editPunchEntry1.value;
+  const s1 = els.editPunchExit1.value;
+  const reason = els.editPunchReason.value.trim();
+  if (!employeeId || !date || !e1 || !s1 || !reason) return showResult(false, "Dades incompletes", "Omple treballador, data, les hores i el motiu.");
+  if (date > todayLocalIso()) return showResult(false, "Data no permesa", "No es poden crear jornades en dies futurs.");
+  if (editPunchMode === "half" && !(minutesFromTime(e1) < minutesFromTime(s1))) return showResult(false, "Horari no vàlid", "A la mitja jornada, l'entrada ha de ser anterior a la sortida.");
+  if (editPunchMode === "full") {
+    const e2 = els.editPunchEntry2.value, s2 = els.editPunchExit2.value;
+    if (!e2 || !s2) return showResult(false, "Dades incompletes", "A la jornada completa cal indicar les dues entrades i les dues sortides.");
+    if (!(minutesFromTime(e1) < minutesFromTime(s1) && minutesFromTime(s1) <= minutesFromTime(e2) && minutesFromTime(e2) < minutesFromTime(s2))) return showResult(false, "Horari no vàlid", "Revisa l'ordre de les quatre hores.");
+  }
   els.savePunchDayBtn.disabled = true;
-  const { error } = await db.rpc("admin_guardar_jornada_doble", payload);
+  let error;
+  if (editPunchMode === "half") {
+    ({ error } = await db.rpc("admin_guardar_jornada", { p_empleat_id: employeeId, p_data: date, p_hora_entrada: e1, p_hora_sortida: s1, p_motiu: reason }));
+  } else {
+    ({ error } = await db.rpc("admin_guardar_jornada_doble", { p_empleat_id: employeeId, p_data: date, p_entrada_1: e1, p_sortida_1: s1, p_entrada_2: els.editPunchEntry2.value, p_sortida_2: els.editPunchExit2.value, p_motiu: reason }));
+  }
   els.savePunchDayBtn.disabled = false;
   if (error) return showResult(false, "No s'ha pogut guardar", humanizeError(error.message));
-  showResult(true, "Dues jornades guardades", `${payload.p_data} · ${payload.p_entrada_1}-${payload.p_sortida_1} / ${payload.p_entrada_2}-${payload.p_sortida_2}`);
+  showResult(true, editPunchMode === "half" ? "Mitja jornada guardada" : "Jornada completa guardada", editPunchMode === "half" ? `${date} · ${e1}-${s1}` : `${date} · ${e1}-${s1} / ${els.editPunchEntry2.value}-${els.editPunchExit2.value}`);
   await loadRecords();
 }
 async function clearPunchDay() {
@@ -595,17 +642,49 @@ function setEditorMonth() {
   const now = new Date();
   els.editCalendarMonth.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
 }
-function renderEditPunchCalendar() {
+let editCalendarRequestId = 0;
+
+async function renderEditPunchCalendar() {
+  const requestId = ++editCalendarRequestId;
   const employeeId = els.editPunchEmployee.value;
   const monthValue = els.editCalendarMonth.value;
-  if (!employeeId || !monthValue) { els.editPunchCalendar.innerHTML = '<span class="calendar-day empty"></span>'; return; }
+  if (!employeeId || !monthValue) {
+    els.editPunchCalendar.innerHTML = '<span class="calendar-day empty"></span>';
+    return;
+  }
+
   const employee = employees.find(e => String(e.id) === String(employeeId));
-  if (!employee) return;
+  if (!employee) {
+    els.editPunchCalendar.innerHTML = '<span class="calendar-day empty"></span>';
+    return;
+  }
+
   const [year, month] = monthValue.split("-").map(Number);
-  const records = currentRecords.filter(r => {
-    const p = localParts(r.data_hora);
-    return String(r.codi) === String(employee.codi) && `${p.year}-${p.month}` === monthValue;
-  });
+  let records = [];
+
+  // IMPORTANT: no depenem de currentRecords (que està limitat als últims 10.000
+  // fitxatges). L'editor ha de poder pintar també jornades històriques.
+  const { data, error } = await db
+    .from("vista_fitxatges")
+    .select("data_hora,tipus")
+    .eq("codi", employee.codi)
+    .order("data_hora", { ascending: true });
+
+  if (requestId !== editCalendarRequestId) return;
+
+  if (!error) {
+    records = (data || []).filter(r => {
+      const p = localParts(r.data_hora);
+      return `${p.year}-${p.month}` === monthValue;
+    });
+  } else {
+    // Si la consulta directa falla, mantenim un fallback amb les dades ja carregades.
+    records = currentRecords.filter(r => {
+      const p = localParts(r.data_hora);
+      return String(r.codi) === String(employee.codi) && `${p.year}-${p.month}` === monthValue;
+    });
+  }
+
   const worked = new Set(records.map(r => Number(localParts(r.data_hora).day)));
   const daysInMonth = new Date(year, month, 0).getDate();
   const mondayIndex = (new Date(year, month - 1, 1).getDay() + 6) % 7;
@@ -727,7 +806,10 @@ els.notificationBtn.addEventListener("click", requestNotifications);
 els.editPunchEmployee.addEventListener("change", renderEditPunchCalendar);
 els.editCalendarMonth.addEventListener("input", renderEditPunchCalendar);
 els.editPunchCalendar.addEventListener("click", event => { const button = event.target.closest("[data-editor-date]"); if (button && !button.disabled) selectEditorDate(button.dataset.editorDate); });
+els.editFullDayBtn.addEventListener("click", () => setPunchEditorMode("full"));
+els.editHalfDayBtn.addEventListener("click", () => setPunchEditorMode("half"));
 [els.editPunchEntry1,els.editPunchExit1,els.editPunchEntry2,els.editPunchExit2].forEach(el => el.addEventListener("input", calculateSplitHours));
+setPunchEditorMode("full");
 els.editPunchDate.max = todayLocalIso(); els.batchStartDate.max = todayLocalIso(); els.batchEndDate.max = todayLocalIso();
 
 els.workerPortalBtn.addEventListener("click", openWorkerPortal);

@@ -155,7 +155,7 @@
             <div class="admin-section category-content">
               <div class="section-heading">
                 <div><h2>Empleats</h2><p>Crea, edita, activa o desactiva treballadors.</p></div>
-                <div class="status-filters"><button type="button" class="chip active" data-status="all">Tots</button><button type="button" class="chip" data-status="active">Actius</button><button type="button" class="chip" data-status="inactive">Inactius</button></div>
+                <div class="status-filters" aria-label="Filtrar empleats"><button type="button" class="chip active" data-status="all">Tots <span class="status-count" id="employeeStatusAllCount">0</span></button><button type="button" class="chip" data-status="active">Actius <span class="status-count" id="employeeStatusActiveCount">0</span></button><button type="button" class="chip" data-status="inactive">Inactius <span class="status-count" id="employeeStatusInactiveCount">0</span></button></div>
               </div>
               <form class="employee-form" id="employeeForm">
                 <input type="hidden" id="editingEmployeeId" />
@@ -189,10 +189,17 @@
               </div>
               <form id="punchEditorForm" class="punch-editor-form">
                 <input id="editPunchDate" type="hidden" required />
+                <div class="punch-mode-selector">
+                  <span class="punch-mode-title">Tipus de jornada</span>
+                  <div class="punch-mode-buttons" role="group" aria-label="Tipus de jornada">
+                    <button type="button" class="punch-mode-btn active" id="editFullDayBtn" data-punch-mode="full">Jornada completa <small>2 entrades · 2 sortides</small></button>
+                    <button type="button" class="punch-mode-btn" id="editHalfDayBtn" data-punch-mode="half">Mitja jornada <small>1 entrada · 1 sortida</small></button>
+                  </div>
+                </div>
                 <label>Entrada 1<input id="editPunchEntry1" type="time" step="60" required /></label>
-                <label>Sortida 1 · inici pausa<input id="editPunchExit1" type="time" step="60" required /></label>
-                <label>Entrada 2 · final pausa<input id="editPunchEntry2" type="time" step="60" required /></label>
-                <label>Sortida 2<input id="editPunchExit2" type="time" step="60" required /></label>
+                <label id="editPunchExit1Label">Sortida 1 · inici pausa<input id="editPunchExit1" type="time" step="60" required /></label>
+                <label id="editPunchEntry2Label">Entrada 2 · final pausa<input id="editPunchEntry2" type="time" step="60" required /></label>
+                <label id="editPunchExit2Label">Sortida 2<input id="editPunchExit2" type="time" step="60" required /></label>
                 <label>Hores treballades<input id="editPunchHours" type="text" readonly placeholder="0 h 00 min" /></label>
                 <label>Motiu de la correcció<input id="editPunchReason" type="text" maxlength="250" placeholder="Ex. Oblit de fitxatge" required /></label>
                 <div class="employee-form-actions"><button type="button" class="secondary-btn" id="loadPunchDayBtn">Carregar dia</button><button type="submit" class="secondary-btn primary-action" id="savePunchDayBtn">Guardar jornada</button><button type="button" class="secondary-btn danger" id="clearPunchDayBtn">Deixar dia sense fitxatges</button></div>
